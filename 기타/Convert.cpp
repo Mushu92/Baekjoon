@@ -19,52 +19,14 @@ int main() {
 	for (int i = 0; i < Size; i++) {
 		buf[i] = InputString.at(i);
 	}
-
 	int flag = FlagCheck(buf, Size);
-
-	//계산
-	switch (flag) {
-		case 1:
-			if (Size - 2 > 8) {//유효범위 넘게 들어온경우
-				cout << "Error" << endl;
-				return 0;
-			}
-			else if (Size - 2 == 8) {//양수,음수 판단해야하는 경우
-				int num = buf[2];
-				if (Check16(num)) {//음수
-					buf[2] = num - 8;
-					cout << -CalInt(buf, Size, flag) << endl;//음수 처리
-				}
-				else {//양수
-					cout << CalInt(buf, Size, flag) << endl;
-				}
-			}
-			else {
-				cout << CalInt(buf,Size,flag) << endl;
-			}
-			break;
-			
-		case 2:
-			cout << CalInt(buf, Size, flag) << endl;
-			break;
-		case 3:
-			cout << CalInt(buf, Size, flag) << endl;
-			break;
-		case 4:
-			cout << -CalInt(buf, Size, flag) << endl;
-			break;
-		case 5:
-			cout << CalFloat(buf, Size, flag) << endl;
-			break;
-		case 6:
-			cout << -CalFloat(buf, Size, flag) << endl;
-			break;
-	}
+	if (flag == 4) cout << CalFloat(buf, Size, flag) << endl;
+	else cout << CalInt(buf, Size, flag) << endl;
 	system("pause");
 	return 0;
 }
 
-/* Flag검사 모듈 1:16진수 2: 8진수 3: 10진수(+) 4: 10진수(-) 5:Float(+) 6: Float(-)*/
+/* Flag검사 모듈 1:16진수 2: 8진수 3: 10진수 4:Float*/
 int FlagCheck(char* buf, int Size) {
 	int flag;
 	if (buf[0] == '0') {
@@ -73,17 +35,14 @@ int FlagCheck(char* buf, int Size) {
 	}
 	else {
 		flag = 3;
-		if (buf[0] == '-') flag = 4;
 		for (int i = 0; i < Size; i++) {
-			if (buf[i] == '.') {
-				flag = 5;
-				if (buf[0] == '-') {
-					flag = 6;
-				}
+			if(buf[i] == '.') {
+				flag = 4;
 				break;
 			}
 		}
 	}
+
 	return flag;
 }
 
@@ -112,23 +71,35 @@ int CalInt(char* buf, int Size,int flag) {
 	int result = 0;
 	int calsize=0;
 	int mult=0;
+	int buho = 1;
 	switch (flag) {
 		case 1:
+			if (Size - 2 > 8) {//유효범위 넘게 들어온경우
+				cout << "Error" << endl;
+				return 0;
+			}
+			else if (Size - 2 == 8) {//양수,음수 판단해야하는 경우
+				int num = buf[2];
+				if (Check16(num)) {//음수
+					buf[2] = num - 8;
+					buho = -buho;
+				}
+			}
 			calsize += 2;
 			mult = 16;
 			break;
 		case 2:	
 			mult = 8;
 			break;
-		case 3:
+		case 3://정수
 			mult = 10;
 			if (buf[0] == '+') {
 				calsize++;
 			}
-			break;
-		case 4:
-			mult = 10;
-			calsize ++;
+			else if (buf[0] == '-') {
+				calsize++;
+				buho = -buho;
+			}
 			break;
 	}
 	for (int i = Size - 1; i >= calsize; --i) {
@@ -141,7 +112,7 @@ int CalInt(char* buf, int Size,int flag) {
 		}
 		result += cton*cres;
 	}
-	return result;
+	return buho*result;
 }
 
 //Float형 계산
@@ -149,9 +120,14 @@ float CalFloat(char* buf, int Size, int flag) {
 	char front[100],behind[100];
 	int frontSize = 0, behindSize = 0, calsize =1 ;
 	float fresult = 0;
+	float buho = 1.0;
 
-	if (flag == 5) {
-		if (buf[0] != '+') calsize--;
+	if (buf[0] == '+') {
+		calsize++;
+	}
+	else if (buf[0] == '-') {
+		calsize++;
+		buho = -buho;
 	}
 
 	for (int i = 0; i < Size; i++) {
@@ -170,7 +146,6 @@ float CalFloat(char* buf, int Size, int flag) {
 	for (int i = frontSize - 1; i >= calsize; --i) {
 		int cton = front[i];
 		cton = ConvertNum(cton);
-		//자리에 따라 10진수 변환
 		float cres = 1.0;
 		for (int j = 0; j < frontSize - i - 1; j++) {
 			cres *= 10.0;
@@ -181,12 +156,11 @@ float CalFloat(char* buf, int Size, int flag) {
 		int cton = behind[i];
 		if (cton - 48 > 10) cton -= 55;
 		else cton -= 48;
-		//자리에 따라 10진수 변환
 		float cres = 0.1;
 		for (int j = 0; j < behindSize - i - 1; j++) {
 			cres /= 10.0;
 		}
 		fresult += cton*cres;
 	}
-	return fresult;
+	return buho*fresult;
 }

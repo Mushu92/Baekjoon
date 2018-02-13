@@ -41,6 +41,7 @@ public:
 				else heaparr[1] = cur;
 				break;
 			default:
+				//주요 부분
 				int parent = 1;
 				int child = parent * 2;
 				while (child <= heapindex) {
